@@ -2,7 +2,7 @@ package day10
 
 import kotlin.collections.ArrayDeque
 
-const val DAY = "X"
+const val DAY = "10"
 
 class Main {
     private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
