@@ -6,6 +6,8 @@ class Main {
     private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
 
     private val cave = getInputText().split("\n").map { it.chunked(1).map { it.toInt() } }
+    private val caveXSize = cave.size
+    private val caveYSize = cave[0].size
 
     fun part1(): Int {
         val cave = getInputText().split("\n").map { it.chunked(1).map { it.toInt() } }
@@ -25,10 +27,9 @@ class Main {
         }
     }
 
-    fun part2(): Int {
-        val basinRoots = cave.indices.flatMap { y -> List(cave[0].size) { i -> Pair(y, i) } }.map {
-            Coord(it)
-        }.filter {
+    fun part2(): Int = cave.indices
+        .flatMap { y -> List(cave[0].size) { i -> Coord(y, i) } }
+        .filter {
             val (x, y) = it
             val square = cave[x][y]
             val up = if (y == 0) Int.MAX_VALUE else cave[x][y - 1]
@@ -38,48 +39,22 @@ class Main {
 
             square < up && square < down && square < left && square < right
         }
+        .map { basinRoot -> getBasinCoords(basinRoot.x, basinRoot.y, setOf()).size }
+        .sortedDescending()
+        .take(3)
+        .fold(1) { acc, size -> acc * size }
 
-        val basinSizes = mutableListOf<Int>()
-        val visitedCoords = mutableSetOf<Coord>()
-
-        for (basinRoot in basinRoots) {
-            val basinCoords: Set<Coord> = getBasinCoords(basinRoot.x, basinRoot.y, setOf(), visitedCoords)
-            visitedCoords.addAll(basinCoords)
-            basinSizes.add(basinCoords.size)
+    private fun getBasinCoords(x: Int, y: Int, visitedCoords: Set<Coord>): Set<Coord> =
+        setOf(
+            Coord(x to y - 1),
+            Coord(x to y + 1),
+            Coord(x + 1 to y),
+            Coord(x - 1 to y)
+        ).filter {
+            !visitedCoords.contains(it) && it.x in 0 until caveXSize && it.y in 0 until caveYSize && cave[it.x][it.y] != 9
+        }.fold((visitedCoords + Coord(x, y))) { acc, coord ->
+            acc + getBasinCoords(coord.x, coord.y, acc)
         }
-//            return basinRoots.map {
-//                getBasinCoords(it.x, it.y, setOf(),)
-//            }
-//            .also {
-//                println(it)
-//            }
-//            .sortedByDescending {
-//                it.size
-//            }
-        return basinSizes.sortedByDescending { it }.take(3)
-            .fold(1) { acc, size -> acc * size }
-    }
-
-    fun getBasinCoords(x: Int, y: Int, visitedCoords: Set<Coord>, alreadyVisitedCoords: Set<Coord>): Set<Coord> {
-        if (cave[x][y] == 9) return emptySet()
-
-        val nowVisitedCoords = (visitedCoords + Coord(x, y))
-
-        val toVisit = (
-            setOf(
-                Coord(x to y - 1),
-                Coord(x to y + 1),
-                Coord(x + 1 to y),
-                Coord(x - 1 to y)
-            ) - visitedCoords - alreadyVisitedCoords
-            ).filter {
-            it.x >= 0 && it.x < cave.size && it.y >= 0 && it.y < cave[0].size && cave[it.x][it.y] != 9
-        }
-
-        return nowVisitedCoords + toVisit.map {
-            getBasinCoords(it.x, it.y, nowVisitedCoords, alreadyVisitedCoords)
-        }.flatten().toSet()
-    }
 }
 
 data class Coord(
