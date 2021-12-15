@@ -22,8 +22,9 @@ class Main {
     }
 
     fun findLowestRiskPath(cave: List<List<Int>>): Int {
-        val unvisitedNodes = (cave.indices).flatMap { y -> List(cave[0].size) { x -> Coord(x, y) } }.toMutableSet()
-        val distances: MutableMap<Coord, Int> = unvisitedNodes.associateWith { MAX_VALUE }.toMutableMap()
+        val unvisitedNodes: MutableSet<Coord> = mutableSetOf()
+        val distances: MutableMap<Coord, Int> = mutableMapOf()
+        val visitedNodes: MutableSet<Coord> = mutableSetOf()
 
         distances[Coord(0, 0)] = 0
 
@@ -34,19 +35,19 @@ class Main {
         while (currentNode != finalCoord) {
             val currentDistance = distances[currentNode]!!
             listOf(currentNode.previousX(), currentNode.nextX(), currentNode.previousY(), currentNode.nextY()).forEach {
-                if(it in unvisitedNodes) {
+                if(!visitedNodes.contains(it) && it.y() >= 0 && it.x() >= 0 && it.y() <= finalCoord.y() && it.x() <= finalCoord.x()) {
                     val neighbourWeight = cave[it.y()][it.x()]
-                    val neighbourDistance = distances[it]!!
-                    if (currentDistance + neighbourWeight < neighbourDistance) {
+                    val neighbourDistance = distances[it]
+                    if (neighbourDistance == null || currentDistance + neighbourWeight < neighbourDistance) {
                         distances[it] = currentDistance + neighbourWeight
                     }
+                    unvisitedNodes.add(it)
                 }
             }
             unvisitedNodes.remove(currentNode)
+            visitedNodes.add(currentNode)
 
-            currentNode = unvisitedNodes.minByOrNull { distances[it]!! }!!
-
-//            println(unvisitedNodes.size)
+            currentNode = unvisitedNodes.minByOrNull { distances[it] ?: MAX_VALUE }!!
         }
 
         return distances[finalCoord]!!
