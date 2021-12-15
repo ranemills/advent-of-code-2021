@@ -1,15 +1,12 @@
 package day15
 
+import support.Coord
+import support.Grid
+import support.getCoord
+import support.toGrid
+import support.validCoord
+
 const val DAY = "15"
-
-typealias Coord = Pair<Int, Int>
-
-fun Coord.nextX() = Coord(first + 1, second)
-fun Coord.nextY() = Coord(first, second + 1)
-fun Coord.previousX() = Coord(first - 1, second)
-fun Coord.previousY() = Coord(first, second - 1)
-fun Coord.x() = first
-fun Coord.y() = second
 
 const val MAX_VALUE = 1000000
 
@@ -17,11 +14,11 @@ class Main {
     private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
 
     fun part1(): Int {
-        val cave: List<List<Int>> = getInputText().split("\n").map { it.chunked(1).map { it.toInt() }.toMutableList() }
+        val cave: List<List<Int>> = getInputText().toGrid()
         return findLowestRiskPath(cave)
     }
 
-    fun findLowestRiskPath(cave: List<List<Int>>): Int {
+    fun findLowestRiskPath(cave: Grid<Int>): Int {
         val unvisitedNodes: MutableSet<Coord> = mutableSetOf()
         val distances: MutableMap<Coord, Int> = mutableMapOf()
         val visitedNodes: MutableSet<Coord> = mutableSetOf()
@@ -35,8 +32,8 @@ class Main {
         while (currentNode != finalCoord) {
             val currentDistance = distances[currentNode]!!
             listOf(currentNode.previousX(), currentNode.nextX(), currentNode.previousY(), currentNode.nextY()).forEach {
-                if(!visitedNodes.contains(it) && it.y() >= 0 && it.x() >= 0 && it.y() <= finalCoord.y() && it.x() <= finalCoord.x()) {
-                    val neighbourWeight = cave[it.y()][it.x()]
+                if (!visitedNodes.contains(it) && cave.validCoord(it)) {
+                    val neighbourWeight = cave.getCoord(it)
                     val neighbourDistance = distances[it]
                     if (neighbourDistance == null || currentDistance + neighbourWeight < neighbourDistance) {
                         distances[it] = currentDistance + neighbourWeight
@@ -54,12 +51,12 @@ class Main {
     }
 
     fun part2(): Int {
-        val originalCave: List<List<Int>> = getInputText().split("\n").map { it.chunked(1).map { it.toInt() }.toMutableList() }
+        val originalCave: Grid<Int> = getInputText().toGrid()
 
         val cave: MutableList<MutableList<Int>> = mutableListOf()
 
         for (repeat in (0..4)) {
-            cave.addAll(originalCave.map { it.map { if (it + repeat > 9) it + repeat - 9 else it + repeat }.toMutableList() })
+            cave.addAll(originalCave.map { row -> row.map { if (it + repeat > 9) it + repeat - 9 else it + repeat }.toMutableList() })
         }
 
         for (i in cave.indices) {
