@@ -1,11 +1,12 @@
 package day10
 
+import support.AdventOfCode
 import kotlin.collections.ArrayDeque
 
 const val DAY = "10"
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day10 : AdventOfCode {
+    private fun getInputText(): String = Day10::class.java.getResource("input.txt")?.readText()!!
 
     private val opening = setOf('(', '[', '{', '<')
     private val syntaxScores = mapOf(
@@ -29,9 +30,11 @@ class Main {
     private val matchingFromOpening = matchingFromClosing.entries.associateBy({ it.value }) { it.key }
     private val closing = setOf(')', ']', '}', '>')
 
-    fun part1(): Int {
+    override fun part1(): Int {
         return getInputText().split("\n").sumOf { getSyntaxScore(it) }
     }
+
+    override fun day(): String = "10"
 
     fun getSyntaxScore(line: String): Int {
         val stack: ArrayDeque<Char> = ArrayDeque()
@@ -46,7 +49,7 @@ class Main {
         return 0
     }
 
-    fun part2(): Long {
+    override fun part2(): Long {
         val scores = getInputText().split("\n")
             .filter { getSyntaxScore(it) == 0 }
             .map { line ->
@@ -74,9 +77,5 @@ class Main {
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day10().run()
 }

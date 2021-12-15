@@ -1,11 +1,13 @@
 package day12
 
+import support.AdventOfCode
+
 const val DAY = "12"
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day12 : AdventOfCode {
+    private fun getInputText(): String = Day12::class.java.getResource("input.txt")?.readText()!!
 
-    fun part1(): Int {
+    override fun part1(): Int {
         val smallCaves: MutableSet<String> = mutableSetOf()
         val bigCaves: MutableSet<String> = mutableSetOf()
         val links: MutableMap<String, MutableSet<String>> = mutableMapOf()
@@ -37,7 +39,7 @@ class Main {
     fun String.isUppercase() = this.uppercase() == this
     fun String.isLowercase() = this.lowercase() == this
 
-    fun part2():Int {
+    override fun part2():Int {
         val smallCaves: MutableSet<String> = mutableSetOf()
         val bigCaves: MutableSet<String> = mutableSetOf()
         val links: MutableMap<String, MutableSet<String>> = mutableMapOf()
@@ -55,7 +57,7 @@ class Main {
 //            println(visitedCaves + currentCave)
             var myDoubleVisitedCave: String? = null
             if (currentCave == "end") {
-                println(visitedCaves + currentCave)
+//                println(visitedCaves + currentCave)
                 return 1
             }
             if (currentCave.isLowercase() && visitedCaves.contains(currentCave)) {
@@ -69,12 +71,10 @@ class Main {
 
         return exploreCaves("start", listOf(), null)
     }
+
+    override fun day(): String = "12"
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day12().run()
 }

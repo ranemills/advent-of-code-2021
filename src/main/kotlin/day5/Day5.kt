@@ -1,14 +1,13 @@
 package day5
 
-import java.lang.Double.max
-import kotlin.math.max
+import support.AdventOfCode
 
-const val DAY = "5"
+class Day5 : AdventOfCode {
+    private fun getInputText(): String = Day5::class.java.getResource("input.txt")?.readText()!!
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+    override fun day(): String = "5"
 
-    fun part1(): Int {
+    override fun part1(): Int {
         val grid: MutableList<MutableList<Int>> = mutableListOf()
         for (line in getInputText().split("\n")) {
             val (x1, y1, x2, y2) = line.split(" -> ").map { it.split(",") }.flatten().map { it.toInt() }
@@ -34,7 +33,7 @@ class Main {
         return total
     }
 
-    fun part2(): Int {
+    override fun part2(): Int {
         val grid: MutableList<MutableList<Int>> = mutableListOf()
         for (line in getInputText().split("\n")) {
             val (x1, y1, x2, y2) = line.split(" -> ").map { it.split(",") }.flatten().map { it.toInt() }
@@ -71,9 +70,5 @@ class Main {
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day5().run()
 }

@@ -1,5 +1,7 @@
 package day11
 
+import support.AdventOfCode
+
 const val DAY = "11"
 
 val surrounding = listOf(
@@ -13,10 +15,10 @@ val surrounding = listOf(
     Pair(-1, 1)
 )
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day11 : AdventOfCode {
+    private fun getInputText(): String = Day11::class.java.getResource("input.txt")?.readText()!!
 
-    fun part1(): Int {
+    override fun part1(): Int {
         val octopusGrid = getInputText().split("\n").map { it.chunked(1).map { it.toInt() }.toMutableList() }
         val allCoords = octopusGrid.indices.flatMap { y -> List(octopusGrid[0].size) { i -> Pair(y, i) } }
         return (1..100).sumOf { step ->
@@ -55,7 +57,7 @@ class Main {
         }
     }
 
-    fun part2(): Int {
+    override fun part2(): Int {
         val octopusGrid = getInputText().split("\n").map { it.chunked(1).map { it.toInt() }.toMutableList() }
         val gridSize = octopusGrid.size * octopusGrid[0].size
         val allCoords = octopusGrid.indices.flatMap { y -> List(octopusGrid[0].size) { i -> Pair(y, i) } }
@@ -87,12 +89,10 @@ class Main {
         }
         return -1
     }
+
+    override fun day(): String = "11"
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day11().run()
 }

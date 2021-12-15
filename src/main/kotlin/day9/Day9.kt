@@ -1,15 +1,19 @@
 package day9
 
+import support.AdventOfCode
+
 const val DAY = "9"
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day9 : AdventOfCode {
+    private fun getInputText(): String = Day9::class.java.getResource("input.txt")?.readText()!!
 
     private val cave = getInputText().split("\n").map { it.chunked(1).map { it.toInt() } }
     private val caveXSize = cave.size
     private val caveYSize = cave[0].size
 
-    fun part1(): Int {
+    override fun day(): String = "9"
+
+    override fun part1(): Int {
         val cave = getInputText().split("\n").map { it.chunked(1).map { it.toInt() } }
         return cave.indices.flatMap { y -> List(cave[0].size) { i -> Pair(y, i) } }.sumOf {
             val (x, y) = it
@@ -27,7 +31,7 @@ class Main {
         }
     }
 
-    fun part2(): Int = cave.indices
+    override fun part2(): Int = cave.indices
         .flatMap { y -> List(cave[0].size) { i -> Coord(y, i) } }
         .filter {
             val (x, y) = it
@@ -65,9 +69,5 @@ data class Coord(
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day9().run()
 }

@@ -1,14 +1,15 @@
 package day8
 
+import support.AdventOfCode
 import java.util.regex.Pattern
 import kotlin.collections.ArrayList
 
 const val DAY = "8"
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day8 : AdventOfCode {
+    private fun getInputText(): String = Day8::class.java.getResource("input.txt")?.readText()!!
 
-    fun part1(): Int {
+    override fun part1(): Int {
         return getInputText().split("\n").sumOf { line ->
             val selected = line.split("|")[1].trim().split(Pattern.compile("\\s+")).filter { listOf(2, 4, 3, 7).contains(it.length) }
 
@@ -16,7 +17,7 @@ class Main {
         }
     }
 
-    fun part2(): Int {
+    override fun part2(): Int {
         return getInputText().split("\n").sumOf { line ->
             val outputValues = line.split("|")[1].trim().split(Pattern.compile("\\s+"))
             val allValues = line.split("|").map { it.trim().split(Pattern.compile(" ")) }.flatten()
@@ -77,24 +78,23 @@ class Main {
             // Compute output value
             val inverseNumberMapping = numberMapping.entries.associateBy({ it.value }) { it.key }
 
-            println(inverseNumberMapping)
-            println(numberMapping)
-            println(segmentMapping)
+//            println(inverseNumberMapping)
+//            println(numberMapping)
+//            println(segmentMapping)
 
             outputValues.map {
                 inverseNumberMapping.get(it.toList().sorted())
             }.joinToString("").toInt()
         }
     }
+
+    override fun day(): String = "8"
+
     fun Map<Int, List<Char>>.getNotNull(key: Int): List<Char> {
         return getOrDefault(key, ArrayList())
     }
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day8().run()
 }

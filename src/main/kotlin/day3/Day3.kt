@@ -1,13 +1,16 @@
 package day3
 
+import support.AdventOfCode
 import kotlin.math.pow
 
 const val DAY = "3"
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day3 : AdventOfCode {
+    private fun getInputText(): String = Day3::class.java.getResource("input.txt")?.readText()!!
 
-    fun part1(): Double {
+    override fun day(): String = "3"
+
+    override fun part1(): Double {
         val diagnostics: List<String> = getInputText().split("\n")
         val initialValue = List(diagnostics[0].length) { 0 }
 
@@ -25,7 +28,7 @@ class Main {
         return binaryToDouble(gammaList) * binaryToDouble(epsilonList)
     }
 
-    fun part2(): Double {
+    override fun part2(): Double {
         val diagnostics: List<List<Int>> = getInputText().split("\n").map { it.chunked(1).map { it.toInt() } }
         val initialValue = List(diagnostics[0].size) { 0 }
 
@@ -51,9 +54,5 @@ class Main {
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day3().run()
 }

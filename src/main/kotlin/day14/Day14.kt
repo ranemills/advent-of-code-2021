@@ -1,9 +1,11 @@
 package day14
 
+import support.AdventOfCode
+
 const val DAY = "14"
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day14 : AdventOfCode {
+    private fun getInputText(): String = Day14::class.java.getResource("input.txt")?.readText()!!
 
     val polyMappings = getInputText().split("\n\n")[1].split("\n").associate {
         val (pair, result) = it.split(" -> ")
@@ -12,7 +14,7 @@ class Main {
 
     val pairCache: MutableMap<Pair<Pair<Char, Char>, Int>, Map<Char, Long>> = mutableMapOf()
 
-    fun part1(): Int {
+    override fun part1(): Int {
         val (startingPolymer, mappings) = getInputText().split("\n\n")
         val polyMappings = mappings.split("\n").associate {
             val (pair, result) = it.split(" -> ")
@@ -41,7 +43,9 @@ class Main {
         return chars.first().value - chars.last().value
     }
 
-    fun part2(): Long {
+    override fun day(): String = "14"
+
+    override fun part2(): Long {
         val startingPolymer = getInputText().split("\n\n")[0]
 
         // Hack to count the last element, since we only count the first element of each pair at the leaf node to avoid duplication
@@ -94,9 +98,5 @@ class Main {
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day14().run()
 }

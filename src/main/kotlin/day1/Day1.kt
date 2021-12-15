@@ -1,8 +1,12 @@
 package day1
 
-class Main {
-    fun part1(): Int {
-        val inputTxt: String = Main::class.java.getResource("input.txt")?.readText()!!
+import support.AdventOfCode
+
+class Day1 : AdventOfCode {
+    override fun day(): String = "1"
+
+    override fun part1(): Int {
+        val inputTxt: String = Day1::class.java.getResource("input.txt")?.readText()!!
         val inputValues: List<String> = inputTxt.split("\n")
         return inputValues.fold(Int.MAX_VALUE to 0) { p: Pair<Int, Int>, v: String ->
             v.toInt() to if (p.first < v.toInt()) {
@@ -13,8 +17,8 @@ class Main {
         }.second
     }
 
-    fun part2(): Int {
-        val inputTxt: String = Main::class.java.getResource("input.txt")?.readText()!!
+    override fun part2(): Int {
+        val inputTxt: String = Day1::class.java.getResource("input.txt")?.readText()!!
         val inputValues: List<Int> = inputTxt.split("\n").map { it.toInt() }
         return inputValues.subList(3, inputValues.size).fold(
             inputValues.subList(0, 3) to 0
@@ -33,9 +37,5 @@ class Main {
 }
 
 fun main() {
-    println("Day 1")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day1().run()
 }

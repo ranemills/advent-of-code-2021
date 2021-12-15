@@ -1,11 +1,13 @@
 package day13
 
+import support.AdventOfCode
+
 const val DAY = "13"
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day13 : AdventOfCode {
+    private fun getInputText(): String = Day13::class.java.getResource("input.txt")?.readText()!!
 
-    fun part1(): Int {
+    override fun part1(): Int {
         val coords = getInputText()
             .split("\n\n")[0]
             .split("\n")
@@ -40,7 +42,9 @@ class Main {
         }.size
     }
 
-    fun part2() {
+    override fun day(): String = "13"
+
+    override fun part2() {
         val coords = getInputText()
             .split("\n\n")[0]
             .split("\n")
@@ -92,9 +96,5 @@ class Main {
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day13().run()
 }

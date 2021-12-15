@@ -1,13 +1,14 @@
 package day4
 
+import support.AdventOfCode
 import java.util.regex.Pattern
 
 const val DAY = "4"
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day4 : AdventOfCode {
+    private fun getInputText(): String = Day4::class.java.getResource("input.txt")?.readText()!!
 
-    fun part1(): Int {
+    override fun part1(): Int {
         val lines = getInputText().split("\n\n")
         val numbersCalled = lines[0].split(",").map { it.toInt() }
         val bingoBoards: MutableList<BingoBoard> = lines.subList(1,lines.size).map {
@@ -31,7 +32,7 @@ class Main {
         return 0
     }
 
-    fun part2():Int {
+    override fun part2():Int {
         val lines = getInputText().split("\n\n")
         val numbersCalled = lines[0].split(",").map { it.toInt() }
         val bingoBoards: MutableList<BingoBoard> = lines.subList(1,lines.size).map {
@@ -59,14 +60,12 @@ class Main {
         }
         return 0
     }
+
+    override fun day(): String = "4"
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day4().run()
 }
 
 class BingoBoard(rows: List<List<Int>>, var active: Boolean = true) {

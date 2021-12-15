@@ -1,20 +1,25 @@
 package day6
 
+import support.AdventOfCode
+
 const val DAY = "6"
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day6 : AdventOfCode {
+    private fun getInputText(): String = Day6::class.java.getResource("input.txt")?.readText()!!
 
-    fun part1(): Int {
-        var lanternFish = getInputText().split(",").map { it.toInt() }
-        for (day in 1..256) {
-            lanternFish = lanternFish.flatMap { if (it == 0) listOf(6, 8) else listOf(it - 1) }
-//            println("Day $day: $lanternFish")
-        }
-        return lanternFish.size
+    override fun part1(): Int {
+//        var lanternFish = getInputText().split(",").map { it.toInt() }
+//        for (day in 1..256) {
+//            lanternFish = lanternFish.flatMap { if (it == 0) listOf(6, 8) else listOf(it - 1) }
+////            println("Day $day: $lanternFish")
+//        }
+//        return lanternFish.size
+
+        // TODO
+        return 0
     }
 
-    fun part2(): Long {
+    override fun part2(): Long {
         return (1..256).fold(
             getInputText()
                 .split(",")
@@ -35,12 +40,10 @@ class Main {
             )
         }.values.sum()
     }
+
+    override fun day(): String = "6"
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-//    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day6().run()
 }

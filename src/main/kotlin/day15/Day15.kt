@@ -1,19 +1,20 @@
 package day15
 
+import support.AdventOfCode
 import support.Coord
 import support.Grid
 import support.getCoord
 import support.toGrid
 import support.validCoord
 
-const val DAY = "15"
-
 const val MAX_VALUE = 1000000
 
-class Main {
-    private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
+class Day15 : AdventOfCode {
+    private fun getInputText(): String = Day15::class.java.getResource("input.txt")?.readText()!!
 
-    fun part1(): Int {
+    override fun day() = "15"
+
+    override fun part1(): Int {
         val cave: List<List<Int>> = getInputText().toGrid()
         return findLowestRiskPath(cave)
     }
@@ -50,7 +51,7 @@ class Main {
         return distances[finalCoord]!!
     }
 
-    fun part2(): Int {
+    override fun part2(): Int {
         val originalCave: Grid<Int> = getInputText().toGrid()
 
         val cave: MutableList<MutableList<Int>> = mutableListOf()
@@ -73,9 +74,5 @@ class Main {
 }
 
 fun main() {
-    println("Day $DAY")
-    println("Part 1")
-    println(Main().part1())
-    println("Part 2")
-    println(Main().part2())
+    Day15().run()
 }
