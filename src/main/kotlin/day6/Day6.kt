@@ -8,15 +8,12 @@ class Day6 : AdventOfCode {
     private fun getInputText(): String = Day6::class.java.getResource("input.txt")?.readText()!!
 
     override fun part1(): Int {
-//        var lanternFish = getInputText().split(",").map { it.toInt() }
-//        for (day in 1..256) {
-//            lanternFish = lanternFish.flatMap { if (it == 0) listOf(6, 8) else listOf(it - 1) }
-////            println("Day $day: $lanternFish")
-//        }
-//        return lanternFish.size
-
-        // TODO
-        return 0
+        var lanternFish = getInputText().split(",").map { it.toInt() }
+        for (day in 1..80) {
+            lanternFish = lanternFish.flatMap { if (it == 0) listOf(6, 8) else listOf(it - 1) }
+//            println("Day $day: $lanternFish")
+        }
+        return lanternFish.size
     }
 
     override fun part2(): Long {
