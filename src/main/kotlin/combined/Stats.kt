@@ -24,36 +24,38 @@ import day6.Day6
 import day7.Day7
 import day8.Day8
 import day9.Day9
+import support.AdventOfCode
 import kotlin.system.measureNanoTime
 
 fun main() {
     listOf(
-        Day1(),
-        Day2(),
-        Day3(),
-        Day4(),
-        Day5(),
-        Day6(),
-        Day7(),
-        Day8(),
-        Day9(),
-        Day10(),
-        Day11(),
-        Day12(),
-        Day13(),
-        Day14(),
-        Day15(),
-        Day16(),
-        Day17(),
-        Day18(),
-        Day19(),
-        Day20(),
-        Day21(),
-        Day22(),
-        Day23(),
-        Day24()
+        Day1::class,
+        Day2::class,
+        Day3::class,
+        Day4::class,
+        Day5::class,
+        Day6::class,
+        Day7::class,
+        Day8::class,
+        Day9::class,
+        Day10::class,
+        Day11::class,
+        Day12::class,
+        Day13::class,
+        Day14::class,
+        Day15::class,
+        Day16::class,
+        Day17::class,
+        Day18::class,
+        Day19::class,
+        Day20::class,
+        Day21::class,
+        Day22::class,
+        Day23::class,
+        Day24::class
     ).joinToString("\n") {
-        "${it.day()}, ${measureNanoTime { it.part1() } / 1000000.toDouble()}, ${measureNanoTime { it.part2() } / 1000000.toDouble()}"
+        val instance: AdventOfCode = it.constructors.first().call()
+        "${instance.day()}, ${measureNanoTime { instance.part1() } / 1000000.toDouble()}, ${measureNanoTime { instance.part2() } / 1000000.toDouble()}"
     }.also {
         println("Day, Part 1, Part 2")
         println(it)

@@ -11,7 +11,7 @@
         <option name="gradleJvm" value="11 (sdkman)" />
         <option name="modules">
           <set>
-            <option value="/media/ryan/Storage/Documents/src/advent-of-code-2021" />
+            <option value="$PROJECT_DIR$" />
           </set>
         </option>
       </GradleProjectSettings>
