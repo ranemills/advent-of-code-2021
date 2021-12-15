@@ -1,46 +1,58 @@
 package day15
 
-import java.util.Collections.min
-
 const val DAY = "15"
 
 typealias Coord = Pair<Int, Int>
 
 fun Coord.nextX() = Coord(first + 1, second)
 fun Coord.nextY() = Coord(first, second + 1)
+fun Coord.previousX() = Coord(first - 1, second)
+fun Coord.previousY() = Coord(first, second - 1)
 fun Coord.x() = first
 fun Coord.y() = second
+
+const val MAX_VALUE = 1000000
 
 class Main {
     private fun getInputText(): String = Main::class.java.getResource("input.txt")?.readText()!!
 
-    val routeCache: MutableMap<Coord, Int> = mutableMapOf()
-
     fun part1(): Int {
         val cave: List<List<Int>> = getInputText().split("\n").map { it.chunked(1).map { it.toInt() }.toMutableList() }
-        return findLowestRiskPath(cave, Coord(0, 0)) - cave[0][0]
+        return findLowestRiskPath(cave)
     }
 
-    fun findLowestRiskPath(cave: List<List<Int>>, point: Coord): Int {
-        val riskValue = cave[point.second][point.first]
+    fun findLowestRiskPath(cave: List<List<Int>>): Int {
+        val unvisitedNodes = (cave.indices).flatMap { y -> List(cave[0].size) { x -> Coord(x, y) } }.toMutableSet()
+        val distances: MutableMap<Coord, Int> = unvisitedNodes.associateWith { MAX_VALUE }.toMutableMap()
 
-        return routeCache.getOrPut(point) {
-            when {
-                (point.x() == cave[0].size - 1 && point.y() == cave.size - 1) -> riskValue
-                (point.x() == cave[0].size - 1) -> riskValue + findLowestRiskPath(cave, point.nextY())
-                (point.y() == cave.size - 1) -> riskValue + findLowestRiskPath(cave, point.nextX())
-                else -> riskValue + min(
-                    listOf(
-                        findLowestRiskPath(cave, point.nextX()),
-                        findLowestRiskPath(cave, point.nextY())
-                    )
-                )
+        distances[Coord(0, 0)] = 0
+
+        var currentNode = Coord(0, 0)
+
+        val finalCoord = Coord(cave[0].size - 1, cave.size - 1)
+
+        while (currentNode != finalCoord) {
+            val currentDistance = distances[currentNode]!!
+            listOf(currentNode.previousX(), currentNode.nextX(), currentNode.previousY(), currentNode.nextY()).forEach {
+                if(it in unvisitedNodes) {
+                    val neighbourWeight = cave[it.y()][it.x()]
+                    val neighbourDistance = distances[it]!!
+                    if (currentDistance + neighbourWeight < neighbourDistance) {
+                        distances[it] = currentDistance + neighbourWeight
+                    }
+                }
             }
+            unvisitedNodes.remove(currentNode)
+
+            currentNode = unvisitedNodes.minByOrNull { distances[it]!! }!!
+
+//            println(unvisitedNodes.size)
         }
+
+        return distances[finalCoord]!!
     }
 
     fun part2(): Int {
-        routeCache.clear()
         val originalCave: List<List<Int>> = getInputText().split("\n").map { it.chunked(1).map { it.toInt() }.toMutableList() }
 
         val cave: MutableList<MutableList<Int>> = mutableListOf()
@@ -57,44 +69,8 @@ class Main {
         }
 
 //        cave.forEach { println(it.joinToString("")) }
-        println(cave[0][0])
-        println(cave[100][0])
-        println(cave[200][0])
-        println(cave[300][0])
-        println(cave[400][0])
-        println()
 
-        println(cave[0][100])
-        println(cave[100][100])
-        println(cave[200][100])
-        println(cave[300][100])
-        println(cave[400][100])
-        println()
-
-        println(cave[0][200])
-        println(cave[100][200])
-        println(cave[200][200])
-        println(cave[300][200])
-        println(cave[400][200])
-        println()
-
-        println(cave[0][300])
-        println(cave[100][300])
-        println(cave[200][300])
-        println(cave[300][300])
-        println(cave[400][300])
-        println()
-
-        println(cave[0][400])
-        println(cave[100][400])
-        println(cave[200][400])
-        println(cave[300][400])
-        println(cave[400][400])
-        println()
-
-
-        val retVal = findLowestRiskPath(cave, Coord(0, 0)) - cave[0][0]
-        return retVal
+        return findLowestRiskPath(cave)
     }
 }
 
