@@ -3,6 +3,7 @@ package day17
 import support.AdventOfCode
 import support.Coord
 import support.allPairs
+import kotlin.math.max
 
 // Example
 //val targetX = 20..30
@@ -12,13 +13,15 @@ import support.allPairs
 val targetX = 32..65
 val targetY = -225..-177
 
+val initialCoord = Coord(0, 0)
+
 class Day17 : AdventOfCode {
 
     override fun day(): String = "17"
 
     override fun part1(): Int {
         return allPairs(0, 200, -500, 500).map {
-            runSimulation(Coord(it))
+            runSimulation(initialCoord, Coord(it), 0)
         }.filter {
             it.first
         }.maxByOrNull {
@@ -26,37 +29,22 @@ class Day17 : AdventOfCode {
         }!!.second
     }
 
-    fun runSimulation(initialVelocity: Coord): Pair<Boolean, Int> {
-        var velocity = initialVelocity.copy()
-        var position = Coord(0, 0)
-        var maxY = 0
-
-        while (
-            !(position.x in targetX && position.y in targetY)
-        ) {
-            // have we gone past it?
-            if (position.y < targetY.first || position.x > targetX.last) {
-//                println("Velocity $initialVelocity gone past it")
-                return Pair(false, maxY)
-            }
-
-            if (position.y > maxY) maxY = position.y
-
-            position = Coord(position.x + velocity.x, position.y + velocity.y)
-            velocity = Coord(
+    tailrec fun runSimulation(position: Coord, velocity: Coord, maxY: Int): Pair<Boolean, Int> {
+        if (position.y < targetY.first || position.x > targetX.last) return Pair(false, 0)
+        if (position.x in targetX && position.y in targetY) return Pair(true, maxY)
+        return runSimulation(
+            position + velocity,
+            Coord(
                 if (velocity.x > 0) velocity.x - 1 else velocity.x,
                 velocity.y - 1
-            )
-
-//            println(position)
-
-        }
-        return Pair(true, maxY)
+            ),
+            max(maxY, position.y)
+        )
     }
 
     override fun part2(): Int {
         return allPairs(0, 200, -500, 500).map {
-            runSimulation(Coord(it))
+            runSimulation(initialCoord, Coord(it), 0)
         }.filter {
             it.first
         }.size

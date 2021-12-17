@@ -8,6 +8,7 @@ data class Coord(val x: Int, val y: Int) {
     fun nextY() = Coord(x, y + 1)
     fun previousX() = Coord(x - 1, y)
     fun previousY() = Coord(x, y - 1)
+    infix operator fun plus(other: Coord) = Coord(this.x+other.x, this.y+other.y)
 }
 
 typealias Grid<T> = List<List<T>>
