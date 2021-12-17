@@ -3,6 +3,7 @@ package support
 import kotlin.system.measureNanoTime
 
 data class Coord(val x: Int, val y: Int) {
+    constructor(pair: Pair<Int, Int>) : this(pair.first, pair.second)
     fun nextX() = Coord(x + 1, y)
     fun nextY() = Coord(x, y + 1)
     fun previousX() = Coord(x - 1, y)
@@ -15,6 +16,10 @@ fun String.toGrid(): Grid<Int> = this.split("\n").map { it.chunked(1).map { it.t
 fun <T> Grid<T>.getCoord(x: Int, y: Int): T = this[y][x]
 fun <T> Grid<T>.getCoord(coord: Coord): T = this[coord.y][coord.x]
 fun Grid<*>.validCoord(coord: Coord) = coord.x in this[0].indices && coord.y in this.indices
+
+fun allPairs(xSize: Int, ySize: Int) = allPairs(0, xSize, 0, ySize)
+fun allPairs(xLowerBound: Int, xUpperBound: Int, yLowerBound: Int, yUpperBound: Int) =
+    (yLowerBound..yUpperBound).flatMap { y -> (xLowerBound..xUpperBound).map { x -> Pair(x,y) } }
 
 interface AdventOfCode {
     fun part1(): Any
