@@ -21,53 +21,133 @@ class Day18 : AdventOfCode {
 
     override fun day(): String = "18"
 
-    override fun part1() {
-        val input = listOf(
-            "[[[0,[4,5]],[0,0]],[[[4,5],[2,6]],[9,5]]]",
-            "[7,[[[3,7],[4,3]],[[6,3],[8,8]]]]"
-        )
-//        val input = "[7,[6,[5,[4,[3,2]]]]]"
+    override fun part1(): Int {
+        val input = getInputText().split("\n")
 
-        var result = input[0]
+        var result = reduceNumber(input[0])
+
         for(i in input.subList(1, input.size)) {
-            result = reduceNumber(addNumbers(result, i))
+            result = reduceNumber(addNumbers(result, reduceNumber(i)))
         }
+
+        return computeMagnitude(result)
+    }
+
+    private fun computeMagnitude(input: String): Int {
+        var processed = input
+        while(processed.contains("[")) {
+            var chosenPair = ""
+            // find a pair
+            for(c in processed) {
+                chosenPair += c
+                if(c == '[') chosenPair = "["
+                if(c == ']') {
+
+                    break
+                }
+            }
+            val (left, right) = chosenPair.subSequence(1,chosenPair.length-1).split(",").map { it.toInt() }
+            processed = processed.replace(chosenPair, (left*3+right*2).toString())
+        }
+        return processed.toInt()
     }
 
     private fun reduceNumber(input: String): String {
         var processed = input
 
-        println(input)
-
         while (true) {
-            val reduced = explodeNumbers(processed)
-            println("Explode")
-            println(reduced)
+            val reduced = explodeNumbers2(processed)
             if(reduced != processed) {
+                // println("Explode")
+                // println(reduced)
                 processed = reduced
                 continue
             }
 
             val split = splitNumber(reduced)
-            println("Split")
-            println(split)
 
             if (split == processed) break
+
+            // println("Split")
+            // println(split)
 
             processed = split
         }
 
-        println("Final")
-        println(processed)
-
         return processed
     }
 
-//    fun parseNumber(input: String): TreeNode {
-//
-//    }
+    override fun part2(): Int {
+        val input = getInputText().split("\n")
+        return input.flatMap { i -> input.map { j -> Pair(i,j)} }.map { (i, j) ->
+            computeMagnitude(reduceNumber(addNumbers(i, j)))
+        }.maxByOrNull { it }!!
+    }
 
-    override fun part2() {
+    fun explodeNumbers2(input: String): String {
+        var countOpen = 0
+        var chosenPair = ""
+        var chosenPairStartingIdx = 0
+        for((idx, it) in input.withIndex()) {
+            chosenPair += it
+
+            if(it == '[') {
+                countOpen += 1
+                chosenPairStartingIdx = idx
+                chosenPair = "["
+            }
+            if(it == ']') {
+                if(countOpen > 4) {
+                    val (left, right) = chosenPair.subSequence(1,chosenPair.length-1).split(",").map { it.toInt() }
+
+                    // calculate left chunk
+                    val previous = input.subSequence(0,chosenPairStartingIdx).withIndex().findLast { it.value in '0'..'9' }
+                    val leftChunk = if(previous != null) {
+                        val (previousNumberIdx, previousNumberChar) = previous
+                        val (previousNumberIdxRange, previousNumber) =
+                            if (input[previousNumberIdx - 1] in '0'..'9') {
+                                Pair(
+                                    previousNumberIdx - 1..previousNumberIdx,
+                                    input[previousNumberIdx - 1] + previousNumberChar.toString()
+                                )
+                            } else {
+                                Pair(previousNumberIdx..previousNumberIdx, previousNumberChar.toString())
+                            }
+                        val newPrevious = left + previousNumber.toInt()
+                        input.subSequence(0, chosenPairStartingIdx).replaceRange(previousNumberIdxRange, newPrevious.toString()).toString()
+                    } else input.subSequence(0, chosenPairStartingIdx).toString()
+
+                    val remaining = input.subSequence(chosenPairStartingIdx+chosenPair.length, input.length)
+                    val next = remaining.withIndex().firstOrNull { it.value in '0'..'9' }
+                    val rightChunk: String = if(next != null) {
+                        val (nextNumberIdx, nextNumberChar) = next
+                        val (nextNumberIdxRange, nextNumber) =
+                            if (remaining[nextNumberIdx + 1] in '0'..'9') {
+                                Pair(
+                                    nextNumberIdx..nextNumberIdx + 1,
+                                    nextNumberChar.toString() + remaining[nextNumberIdx + 1]
+                                )
+                            } else {
+                                Pair(nextNumberIdx..nextNumberIdx, nextNumberChar.toString())
+                            }
+
+                        val newNext = right + nextNumber.toInt()
+
+                        remaining.replaceRange(
+                            nextNumberIdxRange,
+                            newNext.toString()
+                        ).toString()
+                    } else input.subSequence(chosenPairStartingIdx+chosenPair.length, input.length).toString()
+
+                    return leftChunk + "0" + rightChunk
+
+                } else input.subSequence(chosenPairStartingIdx + chosenPair.length, input.length)
+                countOpen -= 1
+                chosenPair = ""
+            }
+        }
+
+        return input
     }
 
     fun findDeepestFirstNesting(input: String): Int {
@@ -132,8 +212,7 @@ class Day18 : AdventOfCode {
         val left = floor(matchingNumber/2.0).toInt()
         val right = ceil(matchingNumber/2.0).toInt()
 
-
-        return input.replace(matchingNumberStr, "[$left,$right]")
+        return input.replaceFirst(matchingNumberStr, "[$left,$right]")
     }
 
     fun addNumbers(valOne: String, valTwo: String): String {
