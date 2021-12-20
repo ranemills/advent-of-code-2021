@@ -50,31 +50,26 @@ class Day20 : AdventOfCode {
                                 Coord(x, y)
                             ).map {
                                 if (it in acc || ((it.x !in minX..maxX || it.y !in minY..maxY) && !outsideIsAllLight)) 1 else 0
-                            })] == '#')
+                            })])
                     }
-                }.filter { it.second }.map { it.first }.toSet()
+                }.filter { it.second == '#' }.map { it.first }.toSet()
             }
-
-//            if (i == 50) {
-//                println()
-//                (topMost..bottomMost).forEach { y ->
-//                    (leftMost..rightMost).forEach { x ->
-//                        print(if (Coord(x, y) in ret) '#' else '.')
-//                    }
-//                    println()
-//                }
-//            }
 
             ret
         }.size
     }
 
-    fun getNeighbours(coord: Coord): List<Coord> = (-1..1).flatMap { y -> (-1..1).map { x -> coord + Coord(x, y) } }
-    private fun binaryToInt(binary: List<Int>) = binary.reversed().mapIndexed { idx, value ->
-        value * (2.toDouble().pow(
-            idx
-        ))
-    }.sum().toInt()
+    private val neighbourCache = mutableMapOf<Coord, List<Coord>>()
+    private fun getNeighbours(coord: Coord): List<Coord> = neighbourCache.computeIfAbsent(coord) { (-1..1).flatMap { y -> (-1..1).map { x -> Coord(x+coord.x, y+coord.y) } } }
+
+    private fun binaryToInt(binary: List<Int>): Int {
+        val lastIndex = binary.lastIndex
+        return binary.withIndex().sumOf { (idx, value) ->
+            value * (2.toDouble().pow(
+                lastIndex-idx
+            ))
+        }.toInt()
+    }
 }
 
 fun main() {
