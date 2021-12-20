@@ -30,6 +30,9 @@ class Day19 : AdventOfCode {
         }
 
         val allBeacons = beaconDetectionsPerScanner[0]!!.toMutableSet()
+        val fixedBeacons = mutableMapOf(
+            0 to beaconDetectionsPerScanner[0]!!
+        )
         val scannerLocations = mutableMapOf(
             0 to (Coord(0,0,0) to listOf { coord: Coord -> Coord(coord.x, coord.y, coord.z) })
         )
@@ -49,7 +52,8 @@ class Day19 : AdventOfCode {
 
                         if (adjustedBeacons.intersect(allBeacons.toSet()).size >= 12) {
                             allBeacons.addAll(adjustedBeacons)
-                            scannerLocations.put(scanner.key, adjustment to transform)
+                            fixedBeacons[scanner.key] = adjustedBeacons
+                            scannerLocations[scanner.key] = adjustment to transform
                             success = true
                             break
                         }
