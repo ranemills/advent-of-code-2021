@@ -10,8 +10,8 @@ data class Coord(
 ) {
     constructor(x: Int, y: Int, z: Int) : this(x.toLong(), y.toLong(), z.toLong())
 
-    infix operator fun minus(other: Coord) = Coord(this.x-other.x, this.y-other.y, this.z-other.z)
-    infix operator fun plus(other: Coord) = Coord(this.x+other.x, this.y+other.y, this.z+other.z)
+    infix operator fun minus(other: Coord) = Coord(this.x - other.x, this.y - other.y, this.z - other.z)
+    infix operator fun plus(other: Coord) = Coord(this.x + other.x, this.y + other.y, this.z + other.z)
 }
 
 class Day19 : AdventOfCode {
@@ -19,7 +19,7 @@ class Day19 : AdventOfCode {
 
     override fun day(): String = "19"
 
-    override fun part1(): Int {
+    fun findBeaconsAndScanners(): Pair<MutableMap<Int, Coord>, MutableSet<Coord>> {
         val beaconDetectionsPerScanner = getInputText().split("\n\n").associate {
             val lines = it.split("\n")
             val points = lines.subList(1, lines.size).map {
@@ -29,61 +29,75 @@ class Day19 : AdventOfCode {
             Pair(lines[0].replace("-", "").replace("scanner", "").trim().toInt(), points)
         }
 
+        val scannersToFind = beaconDetectionsPerScanner.keys.toMutableList()
+
         val allBeacons = beaconDetectionsPerScanner[0]!!.toMutableSet()
-        val fixedBeacons = mutableMapOf(
-            0 to beaconDetectionsPerScanner[0]!!
-        )
         val scannerLocations = mutableMapOf(
-            0 to (Coord(0,0,0) to listOf { coord: Coord -> Coord(coord.x, coord.y, coord.z) })
+            0 to Coord(0, 0, 0)
         )
-        while(beaconDetectionsPerScanner.size - scannerLocations.size > 0) {
-            for (scanner in beaconDetectionsPerScanner.filter { (k, _) -> !scannerLocations.containsKey(k) }) {
-                var success = false
+        scannersToFind.remove(0)
 
-                if (scanner.key == 0) continue
+        while (scannersToFind.isNotEmpty()) {
+            val scannerKey = scannersToFind.removeAt(0)
+            val beacons = beaconDetectionsPerScanner[scannerKey]!!
+//            println("Scanner key: $scannerKey")
+            transforms.firstNotNullOfOrNull { transform ->
+                val transformedBeacons = beacons.map { coord ->
+                    transform.fold(coord) { acc, it -> it(acc) }
+                }
 
-                for (transform in getTransforms()) {
-                    val transformedBeacons = scanner.value.map { coord ->
-                        transform.fold(coord) { acc, it -> it(acc) }
-                    }
-
-                    for (adjustment in allBeacons.flatMap { ab -> transformedBeacons.map { tb -> ab - tb } }) {
+                allBeacons
+                    .flatMap { ab -> transformedBeacons.map { tb -> ab - tb } }
+                    .distinct()
+                    .firstNotNullOfOrNull { adjustment ->
                         val adjustedBeacons = transformedBeacons.map { it + adjustment }
+                        var c = 0
+                        for((idx,b) in adjustedBeacons.withIndex()) {
+                            if(b in allBeacons) c++
+                            if(c >= 12 || idx > adjustedBeacons.size-12+c) break
+                        }
 
-                        if (adjustedBeacons.intersect(allBeacons.toSet()).size >= 12) {
-                            allBeacons.addAll(adjustedBeacons)
-                            fixedBeacons[scanner.key] = adjustedBeacons
-                            scannerLocations[scanner.key] = adjustment to transform
-                            success = true
-                            break
+                        if (c >= 12) {
+                            adjustment to adjustedBeacons
+                        } else {
+                            null
                         }
                     }
-                    if (success) break
-                }
-            }
+            }?.also {
+                val (adjustment, adjustedBeacons) = it
+                allBeacons.addAll(adjustedBeacons)
+                scannerLocations[scannerKey] = adjustment
+            } ?: scannersToFind.add(scannerKey)
         }
 
-        scannerLocations.forEach { (k,v) -> println("$k: ${v.first}")}
+        return Pair(scannerLocations, allBeacons)
+    }
 
-        val rawScannerLocations = scannerLocations.map { (k,v) -> v.first }
-
-        println(rawScannerLocations.flatMap { x -> rawScannerLocations.map { y -> x - y } }.map { abs(it.x) + abs(it.y) + abs(it.z) }.maxByOrNull { it })
-
+    override fun part1(): Int {
+        val (_, allBeacons) = findBeaconsAndScanners()
         return allBeacons.size
     }
 
+    override fun part2(): Long {
+        val (scannerLocations, _) = findBeaconsAndScanners()
 
-    override fun part2() {
+        return scannerLocations.values.flatMap { x ->
+            scannerLocations.values.map { y ->
+                x - y
+            }
+        }.maxOf {
+            abs(it.x) + abs(it.y) + abs(it.z)
+        }
     }
 
 
-    fun getTransforms(): List<List<(Coord) -> Coord>> {
+    private val transforms by lazy {
         // generate each orientation
         val xRotate: (Coord) -> Coord = { coord: Coord -> Coord(coord.x, coord.z, -coord.y) }
         val yRotate: (Coord) -> Coord = { coord: Coord -> Coord(coord.z, coord.y, -coord.x) }
         val zRotate: (Coord) -> Coord = { coord: Coord -> Coord(coord.y, -coord.x, coord.z) }
 
-        return listOf(
+        listOf(
             listOf(xRotate),
             listOf(xRotate, xRotate),
             listOf(xRotate, xRotate, xRotate),
@@ -110,6 +124,7 @@ class Day19 : AdventOfCode {
             listOf(zRotate, zRotate, zRotate, yRotate, yRotate, xRotate, xRotate),
         )
     }
+
 }
 
 fun main() {
