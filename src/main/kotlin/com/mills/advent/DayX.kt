@@ -2,8 +2,6 @@ package com.mills.advent
 
 import com.mills.advent.support.AdventOfCode
 
-const val DAY = "X"
-
 class DayX : AdventOfCode {
     private fun getInputText(): String = DayX::class.java.getResource("dayX.txt")?.readText()!!
 
