@@ -49,8 +49,9 @@ class Day23Djikstra : AdventOfCode {
             .associate { it }
 
         var currentGrid: Map<Coord, Char> = grid
-        val gridCosts = mutableMapOf(currentGrid to 0)
+//        val gridCosts = mutableMapOf(currentGrid to 0)
         val gridCostsBackup = mutableMapOf(currentGrid to 0)
+        val gridCosts = sortedMapOf(0 to mutableSetOf(currentGrid))
         val visitedNodes = mutableSetOf(grid)
         val previous: MutableMap<Map<Coord,Char>, Map<Coord,Char>> = mutableMapOf()
 
@@ -71,21 +72,32 @@ class Day23Djikstra : AdventOfCode {
                 newGrid[end] = startValue
                 newGrid[start] = '.'
 
-                newGrid to gridCosts[currentGrid]!! + cost
+                newGrid to gridCostsBackup[currentGrid]!! + cost
             }.filter {
                 it.key !in visitedNodes
             }.forEach{ (neighbour, cost) ->
-                if(gridCosts.getOrDefault(neighbour, MAX) > cost) {
-                    gridCosts[neighbour] = cost
+                val storedCost = gridCostsBackup.getOrDefault(neighbour, MAX)
+                if(storedCost > cost) {
                     gridCostsBackup[neighbour] = cost
                     previous[neighbour] = currentGrid
+
+                    val storedSet = gridCosts.computeIfAbsent(storedCost) { mutableSetOf() }
+                    storedSet.remove(neighbour)
+                    if(storedSet.isEmpty()) {
+                        gridCosts.remove(storedCost)
+                    } else {
+                        gridCosts[storedCost] = storedSet
+                    }
+
+                    val newSet = gridCosts.computeIfAbsent(cost) { mutableSetOf() }
+                    newSet.add(neighbour)
+                    gridCosts[cost] = newSet
                 }
             }
 
             visitedNodes.add(currentGrid)
-            gridCosts.remove(currentGrid)
 
-            val nextGrid = gridCosts.minByOrNull { it.value }?.key
+            val nextGrid = gridCosts[gridCosts.firstKey()]?.first()
             currentGrid = nextGrid!!
         }
 
@@ -96,7 +108,7 @@ class Day23Djikstra : AdventOfCode {
             printingGrid = previous[printingGrid]!!
         }
 
-        return gridCosts[currentGrid]!!
+        return gridCostsBackup[currentGrid]!!
     }
 
     fun Map<Coord, Char>.print() {
