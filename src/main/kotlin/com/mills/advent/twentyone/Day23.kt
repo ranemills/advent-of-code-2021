@@ -98,7 +98,9 @@ data class Grid(
                 val destRoom = getDestinationRoom(charToMove)
                 val outRoomList = if(
                     destRoom.contents.size != roomSize &&
-                    isCorridorRouteEmpty(fromRoom.col, destRoom.col)
+                    destRoom.desiredOccupier != fromRoom.desiredOccupier &&
+                    isCorridorRouteEmpty(fromRoom.col, destRoom.col) &&
+                    destRoom.contents.all { it == destRoom.desiredOccupier }
                 ) {
                     val modifiedDest = destRoom.contents.toMutableList()
                     modifiedDest.add(charToMove)
@@ -193,32 +195,28 @@ class Day23 : AdventOfCode {
         Coord(10, 1),
         Coord(11, 1),
     )
-    val aRoom = listOf(
-        Coord(3, 2),
-        Coord(3, 3)
-    )
-    val bRoom = listOf(
-        Coord(5, 2),
-        Coord(5, 3)
-    )
-    val cRoom = listOf(
-        Coord(7, 2),
-        Coord(7, 3)
-    )
-    val dRoom = listOf(
-        Coord(9, 2),
-        Coord(9, 3)
-    )
 
     override fun part1(): Int {
         val grid = getInputText().split("\n").map { it.chunked(1).map { it[0] }.toMutableList() }
 
         val startingGrid = Grid(
             corridorCoords.map { grid.getCoord(it).toOccupier() }.reversed(),
-            aRoom.map { grid.getCoord(it).toOccupier() }.reversed(),
-            bRoom.map { grid.getCoord(it).toOccupier() }.reversed(),
-            cRoom.map { grid.getCoord(it).toOccupier() }.reversed(),
-            dRoom.map { grid.getCoord(it).toOccupier() }.reversed(),
+            listOf(
+                Coord(3, 2),
+                Coord(3, 3)
+            ).map { grid.getCoord(it).toOccupier() }.reversed(),
+            listOf(
+                Coord(5, 2),
+                Coord(5, 3)
+            ).map { grid.getCoord(it).toOccupier() }.reversed(),
+            listOf(
+                Coord(7, 2),
+                Coord(7, 3)
+            ).map { grid.getCoord(it).toOccupier() }.reversed(),
+            listOf(
+                Coord(9, 2),
+                Coord(9, 3)
+            ).map { grid.getCoord(it).toOccupier() }.reversed(),
             2
         )
 
@@ -233,7 +231,7 @@ class Day23 : AdventOfCode {
             List(startingGrid.roomB.size) { Occupier.B },
             List(startingGrid.roomC.size) { Occupier.C },
             List(startingGrid.roomD.size) { Occupier.D },
-            2
+            startingGrid.roomSize
         )
         var currentGrid: Grid = startingGrid.copy()
 
@@ -280,18 +278,51 @@ class Day23 : AdventOfCode {
             currentGrid = unvisitedCache.first()
         }
 
-        var previousGrid: Grid? = currentGrid
-        while(previousGrid != null) {
-            println(distances[previousGrid])
-            previousGrid.print()
-            previousGrid = previous[previousGrid]
-        }
+        // Printing route
+//        var previousGrid: Grid? = currentGrid
+//        while(previousGrid != null) {
+//            println(distances[previousGrid])
+//            previousGrid.print()
+//            previousGrid = previous[previousGrid]
+//        }
 
         return distances[currentGrid]!!
     }
 
 
-    override fun part2() {
+    override fun part2(): Int {
+        val grid = Day23::class.java.getResource("day23-2.txt")?.readText()!!.split("\n").map { it.chunked(1).map { it[0] }.toMutableList() }
+
+        val startingGrid = Grid(
+            corridorCoords.map { grid.getCoord(it).toOccupier() }.reversed(),
+            listOf(
+                Coord(3, 2),
+                Coord(3, 3),
+                Coord(3, 4),
+                Coord(3, 5)
+            ).map { grid.getCoord(it).toOccupier() }.reversed(),
+            listOf(
+                Coord(5, 2),
+                Coord(5, 3),
+                Coord(5, 4),
+                Coord(5, 5)
+            ).map { grid.getCoord(it).toOccupier() }.reversed(),
+            listOf(
+                Coord(7, 2),
+                Coord(7, 3),
+                Coord(7, 4),
+                Coord(7, 5)
+            ).map { grid.getCoord(it).toOccupier() }.reversed(),
+            listOf(
+                Coord(9, 2),
+                Coord(9, 3),
+                Coord(9, 4),
+                Coord(9, 5)
+            ).map { grid.getCoord(it).toOccupier() }.reversed(),
+            4
+        )
+
+        return solve(startingGrid)
     }
 }
 
