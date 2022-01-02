@@ -30,6 +30,12 @@ data class Grid(
     val roomD: List<Occupier>,
     val roomSize: Int
 ) {
+
+    val roomAObj = Room(roomA, Occupier.A, 2)
+    val roomBObj = Room(roomB, Occupier.B, 4)
+    val roomCObj = Room(roomC, Occupier.C, 6)
+    val roomDObj = Room(roomD, Occupier.D, 8)
+
     val corridorIndices = listOf(0,1,3,5,7,9,10)
 
     fun print() {
@@ -44,10 +50,10 @@ data class Grid(
 
     fun getDestinationRoom(char: Occupier): Room =
         when(char) {
-            Occupier.A -> Room(roomA, Occupier.A, 2)
-            Occupier.B -> Room(roomB, Occupier.B, 4)
-            Occupier.C -> Room(roomC, Occupier.C, 6)
-            Occupier.D -> Room(roomD, Occupier.D, 8)
+            Occupier.A -> roomAObj
+            Occupier.B -> roomBObj
+            Occupier.C -> roomCObj
+            Occupier.D -> roomDObj
             else -> throw IllegalArgumentException()
         }
 
@@ -62,14 +68,22 @@ data class Grid(
         roomD = if(from.first == Occupier.D) from.second else if (to.first == Occupier.D) to.second else roomD
     )
 
+    val corridorEmptyCache: MutableMap<Pair<Int,Int>, Boolean> = mutableMapOf()
+
+    fun isCorridorRouteEmpty(from: Int, to: Int) =
+        corridorEmptyCache.computeIfAbsent(from to to) {
+            corridor.subList(
+                min(from, to)+1,
+                max(from, to)
+            ).all { it == Occupier.EMPTY }
+        }
+
+
     fun getValidNextGrids(): Map<Grid, Int> {
         val emptyCorridorIndices = corridorIndices.filter { corridor[it] == Occupier.EMPTY }
 
         val roomMoves = listOf(
-            Room(roomA, Occupier.A, 2),
-            Room(roomB, Occupier.B, 4),
-            Room(roomC, Occupier.C, 6),
-            Room(roomD, Occupier.D, 8)
+            roomAObj, roomBObj, roomCObj, roomDObj
         ).filter { fromRoom ->
             fromRoom.contents.any { it != fromRoom.desiredOccupier }
         }.flatMap { fromRoom ->
@@ -84,7 +98,7 @@ data class Grid(
                 val destRoom = getDestinationRoom(charToMove)
                 val outRoomList = if(
                     destRoom.contents.size != roomSize &&
-                    corridor.subList(min(fromRoom.col, destRoom.col), max(fromRoom.col+1, destRoom.col+1)).all { it == Occupier.EMPTY }
+                    isCorridorRouteEmpty(fromRoom.col, destRoom.col)
                 ) {
                     val modifiedDest = destRoom.contents.toMutableList()
                     modifiedDest.add(charToMove)
@@ -99,10 +113,7 @@ data class Grid(
 
                 // corridor
                 val outCorridorList = emptyCorridorIndices.filter {
-                    corridor.subList(
-                        min(fromRoom.col, it),
-                        max(fromRoom.col, it)+1
-                    ).all { it == Occupier.EMPTY }
+                    isCorridorRouteEmpty(fromRoom.col, it)
                 }.map {
                     val modifiedCorridor = corridor.toMutableList()
                     modifiedCorridor[it] = charToMove
@@ -130,10 +141,7 @@ data class Grid(
             if(
                 destRoom.contents.size != roomSize &&
                 destRoom.contents.all { it == destRoom.desiredOccupier} &&
-                corridor.subList(
-                    min(destRoom.col, idx)+1,
-                    max(destRoom.col, idx)
-                ).all { it == Occupier.EMPTY }
+                isCorridorRouteEmpty(destRoom.col, idx)
             ) {
                 val modifiedDest = destRoom.contents.toMutableList()
                 modifiedDest.add(charToMove)
@@ -234,6 +242,9 @@ class Day23 : AdventOfCode {
         val distances = mutableMapOf(currentGrid to 0)
         val previous = mutableMapOf<Grid, Grid>()
 
+        val unvisitedCache = mutableSetOf<Grid>()
+        var unvisitedCacheMax = 0
+
 
         while(currentGrid != endGrid) {
             val currentCost = distances[currentGrid]!!
@@ -246,13 +257,27 @@ class Day23 : AdventOfCode {
                 }
 
                 unvisited.add(neighbour)
+
+                if(newCost < unvisitedCacheMax) {
+                    unvisitedCache.add(neighbour)
+                }
+
                 previous[neighbour] = currentGrid
             }
 
             unvisited.remove(currentGrid)
+            unvisitedCache.remove(currentGrid)
             visited.add(currentGrid)
 
-            currentGrid = unvisited.minByOrNull { distances[it]!! }!!
+            if(unvisitedCache.isEmpty()) {
+                val toAdd = unvisited.map { it to distances[it]!! }.sortedBy { it.second }.take(500)
+                unvisitedCacheMax = toAdd.maxOf { it.second }
+                unvisitedCache.addAll(
+                    toAdd.map { it.first }
+                )
+            }
+
+            currentGrid = unvisitedCache.first()
         }
 
         var previousGrid: Grid? = currentGrid
@@ -263,23 +288,6 @@ class Day23 : AdventOfCode {
         }
 
         return distances[currentGrid]!!
-    }
-
-
-    fun getRoom(c: Char) = when (c) {
-        'A' -> aRoom
-        'B' -> bRoom
-        'C' -> cRoom
-        'D' -> dRoom
-        else -> listOf()
-    }
-
-    fun getEnergy(c: Char) = when (c) {
-        'A' -> 1
-        'B' -> 10
-        'C' -> 100
-        'D' -> 1000
-        else -> 0
     }
 
 
