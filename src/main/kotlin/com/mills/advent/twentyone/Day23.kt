@@ -2,13 +2,170 @@ package com.mills.advent.twentyone
 
 import com.mills.advent.support.AdventOfCode
 import com.mills.advent.support.Coord
-import com.mills.advent.support.Grid
 import com.mills.advent.support.getCoord
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 const val MAX = Int.MAX_VALUE / 2
+
+enum class Occupier(
+    val char: Char,
+    val energy: Int
+) {
+    EMPTY('.', 0), A('A', 1), B('B', 10), C('C', 100), D('D', 1000)
+}
+
+data class Room(
+    val contents: List<Occupier>,
+    val desiredOccupier: Occupier,
+    val col: Int
+)
+
+data class Grid(
+    val corridor: List<Occupier>, // 11 items, with 4 illegal spaces
+    val roomA: List<Occupier>,
+    val roomB: List<Occupier>,
+    val roomC: List<Occupier>,
+    val roomD: List<Occupier>,
+    val roomSize: Int
+) {
+    val corridorIndices = listOf(0,1,3,5,7,9,10)
+
+    fun print() {
+        println()
+        corridor.forEach { print(it.char) }
+        println()
+        (roomSize downTo 1).forEach { idx ->
+            println("  ${roomA.getOrElse(idx-1) {Occupier.EMPTY.char}} ${roomB.getOrElse(idx-1) {Occupier.EMPTY.char}} ${roomC.getOrElse(idx-1) { Occupier.EMPTY.char }} ${roomD.getOrElse(idx-1){Occupier.EMPTY.char}} ")
+        }
+        println()
+    }
+
+    fun getDestinationRoom(char: Occupier): Room =
+        when(char) {
+            Occupier.A -> Room(roomA, Occupier.A, 2)
+            Occupier.B -> Room(roomB, Occupier.B, 4)
+            Occupier.C -> Room(roomC, Occupier.C, 6)
+            Occupier.D -> Room(roomD, Occupier.D, 8)
+            else -> throw IllegalArgumentException()
+        }
+
+    fun getCopy(
+        from: Pair<Occupier, List<Occupier>>,
+        to: Pair<Occupier, List<Occupier>>
+    ) = this.copy(
+        corridor = if(from.first == Occupier.EMPTY) from.second else if (to.first == Occupier.EMPTY) to.second else corridor,
+        roomA = if(from.first == Occupier.A) from.second else if (to.first == Occupier.A) to.second else roomA,
+        roomB = if(from.first == Occupier.B) from.second else if (to.first == Occupier.B) to.second else roomB,
+        roomC = if(from.first == Occupier.C) from.second else if (to.first == Occupier.C) to.second else roomC,
+        roomD = if(from.first == Occupier.D) from.second else if (to.first == Occupier.D) to.second else roomD
+    )
+
+    fun getValidNextGrids(): Map<Grid, Int> {
+        val emptyCorridorIndices = corridorIndices.filter { corridor[it] == Occupier.EMPTY }
+
+        val roomMoves = listOf(
+            Room(roomA, Occupier.A, 2),
+            Room(roomB, Occupier.B, 4),
+            Room(roomC, Occupier.C, 6),
+            Room(roomD, Occupier.D, 8)
+        ).filter { fromRoom ->
+            fromRoom.contents.any { it != fromRoom.desiredOccupier }
+        }.flatMap { fromRoom ->
+            val modifiedRoom = fromRoom.contents.toMutableList()
+            val charToMove = modifiedRoom.removeLastOrNull()
+
+            if(charToMove == Occupier.EMPTY)
+                throw IllegalArgumentException()
+
+            if(charToMove != null) {
+                // other rooms
+                val destRoom = getDestinationRoom(charToMove)
+                val outRoomList = if(
+                    destRoom.contents.size != roomSize &&
+                    corridor.subList(min(fromRoom.col, destRoom.col), max(fromRoom.col+1, destRoom.col+1)).all { it == Occupier.EMPTY }
+                ) {
+                    val modifiedDest = destRoom.contents.toMutableList()
+                    modifiedDest.add(charToMove)
+
+                    val energy = ((roomSize-modifiedRoom.size) + (roomSize-destRoom.contents.size) + abs(fromRoom.col - destRoom.col))*charToMove.energy
+
+                    listOf(getCopy(
+                        fromRoom.desiredOccupier to modifiedRoom,
+                        destRoom.desiredOccupier to modifiedDest
+                    ) to energy)
+                } else emptyList()
+
+                // corridor
+                val outCorridorList = emptyCorridorIndices.filter {
+                    corridor.subList(
+                        min(fromRoom.col, it),
+                        max(fromRoom.col, it)+1
+                    ).all { it == Occupier.EMPTY }
+                }.map {
+                    val modifiedCorridor = corridor.toMutableList()
+                    modifiedCorridor[it] = charToMove
+
+                    // energy calculation
+                    val energy = ((roomSize-modifiedRoom.size) + abs(it - fromRoom.col))*charToMove.energy
+
+                    getCopy(
+                        fromRoom.desiredOccupier to modifiedRoom,
+                        Occupier.EMPTY to modifiedCorridor
+                    ) to energy
+                }
+
+                outRoomList + outCorridorList
+
+            } else emptyList()
+        }
+
+        val corridorMoves = corridorIndices.associateWith {
+            corridor[it]
+        }.filter {
+                (_, value) -> value != Occupier.EMPTY
+        }.flatMap { (idx, charToMove) ->
+            val destRoom = getDestinationRoom(charToMove)
+            if(
+                destRoom.contents.size != roomSize &&
+                destRoom.contents.all { it == destRoom.desiredOccupier} &&
+                corridor.subList(
+                    min(destRoom.col, idx)+1,
+                    max(destRoom.col, idx)
+                ).all { it == Occupier.EMPTY }
+            ) {
+                val modifiedDest = destRoom.contents.toMutableList()
+                modifiedDest.add(charToMove)
+
+                val modifiedCorridor = corridor.toMutableList()
+                modifiedCorridor[idx] = Occupier.EMPTY
+
+                val energy = ((roomSize-destRoom.contents.size) + abs(idx - destRoom.col))*charToMove.energy
+
+                listOf(getCopy(
+                    Occupier.EMPTY to modifiedCorridor,
+                    destRoom.desiredOccupier to modifiedDest
+                ) to energy)
+            } else emptyList()
+        }
+
+        return (roomMoves + corridorMoves).associate { it }
+                    // corridor indices = 0,1,3,5,7,9,10
+    }
+
+}
+
+fun Char.toOccupier() =
+    when(this) {
+        '.' -> Occupier.EMPTY
+        'A' -> Occupier.A
+        'B' -> Occupier.B
+        'C' -> Occupier.C
+        'D' -> Occupier.D
+
+        else -> Occupier.EMPTY
+    }
 
 class Day23 : AdventOfCode {
     private fun getInputText(): String = Day23::class.java.getResource("day23.txt")?.readText()!!
@@ -18,9 +175,13 @@ class Day23 : AdventOfCode {
     val corridorCoords = listOf(
         Coord(1, 1),
         Coord(2, 1),
+        Coord(3, 1),
         Coord(4, 1),
+        Coord(5, 1),
         Coord(6, 1),
+        Coord(7, 1),
         Coord(8, 1),
+        Coord(9, 1),
         Coord(10, 1),
         Coord(11, 1),
     )
@@ -43,131 +204,65 @@ class Day23 : AdventOfCode {
 
     override fun part1(): Int {
         val grid = getInputText().split("\n").map { it.chunked(1).map { it[0] }.toMutableList() }
-        val ret = moveAmphipods(grid, listOf(), listOf(), 0)
-        println(ret)
 
-        return ret.second
+        val startingGrid = Grid(
+            corridorCoords.map { grid.getCoord(it).toOccupier() }.reversed(),
+            aRoom.map { grid.getCoord(it).toOccupier() }.reversed(),
+            bRoom.map { grid.getCoord(it).toOccupier() }.reversed(),
+            cRoom.map { grid.getCoord(it).toOccupier() }.reversed(),
+            dRoom.map { grid.getCoord(it).toOccupier() }.reversed(),
+            2
+        )
+
+        return solve(startingGrid)
     }
 
-    fun Grid<Char>.copyGrid() = List(this.size) { idx -> this[idx].toMutableList() }
+    fun solve(startingGrid: Grid): Int {
 
-    var minSoFar = MAX
+        val endGrid = Grid(
+            List(startingGrid.corridor.size) { Occupier.EMPTY},
+            List(startingGrid.roomA.size) { Occupier.A },
+            List(startingGrid.roomB.size) { Occupier.B },
+            List(startingGrid.roomC.size) { Occupier.C },
+            List(startingGrid.roomD.size) { Occupier.D },
+            2
+        )
+        var currentGrid: Grid = startingGrid.copy()
 
-    fun moveAmphipods(grid: Grid<Char>, locked: List<Coord>, visited: List<Grid<Char>>, costSoFar: Int): Pair<List<Pair<Coord, Coord>>, Int> {
-//        println()
-//        grid.forEach { y ->
-//            println(y)
-//        }
+        val visited = mutableSetOf(startingGrid)
+        val unvisited = mutableSetOf<Grid>()
+        val distances = mutableMapOf(currentGrid to 0)
+        val previous = mutableMapOf<Grid, Grid>()
 
-        if(costSoFar > minSoFar)
-            return listOf<Pair<Coord, Coord>>() to MAX
 
-        if (isGridComplete(grid)) {
-            println("Success! $costSoFar")
-            minSoFar = min(costSoFar, minSoFar)
-            return listOf<Pair<Coord, Coord>>() to costSoFar
-        }
+        while(currentGrid != endGrid) {
+            val currentCost = distances[currentGrid]!!
 
-        val outOfRoomMoves = mapOf('A' to aRoom, 'B' to bRoom, 'C' to cRoom, 'D' to dRoom).flatMap { (char, room) ->
-            when {
-                grid.getCoord(room[1]) != char && grid.getCoord(room[0]) == '.' -> listOf(room[1])
-                grid.getCoord(room[1]) != char && grid.getCoord(room[0]) == char -> listOf(room[0])
-                grid.getCoord(room[0]) != char -> listOf(room[0])
-                else -> listOf()
-            }
-        }.filter {
-            it !in locked
-        }.flatMap { roomCoord ->
-            val corridorPairs = corridorCoords.filter { grid.getCoord(it) == '.' }.map { corridorCoord ->
-                roomCoord to corridorCoord
-            }
-            val otherRoom = getRoom(grid.getCoord(roomCoord))
-            val otherRoomPairs = if(otherRoom.isNotEmpty()) {
-                if (grid.getCoord(otherRoom[0]) == '.') {
-                    if (grid.getCoord(otherRoom[1]) == '.') {
-                        listOf(roomCoord to otherRoom[1])
-                    } else {
-                        listOf(roomCoord to otherRoom[0])
-                    }
-                } else {
-                    listOf()
+            currentGrid.getValidNextGrids().minus(visited).forEach { (neighbour, energy) ->
+                val newCost = currentCost + energy
+
+                distances.compute(neighbour) { _, storedEnergy ->
+                    if(storedEnergy == null) newCost else min(newCost, storedEnergy)
                 }
-            } else listOf()
 
+                unvisited.add(neighbour)
+                previous[neighbour] = currentGrid
+            }
 
-            corridorPairs + otherRoomPairs
+            unvisited.remove(currentGrid)
+            visited.add(currentGrid)
+
+            currentGrid = unvisited.minByOrNull { distances[it]!! }!!
         }
 
-        val outOfCorridorMoves = corridorCoords.associate { corridorCoord ->
-            corridorCoord to grid.getCoord(corridorCoord)
-        }.filter {
-            it.value != '.'
-        }.flatMap { (corridorCoord, char) ->
-            val room = getRoom(char)
-            if (grid.getCoord(room[0]) == '.') {
-                if (grid.getCoord(room[1]) == '.') {
-                    listOf(corridorCoord to room[1], corridorCoord to room[0])
-                } else {
-                    listOf(corridorCoord to room[0])
-                }
-            } else {
-                listOf()
-            }
+        var previousGrid: Grid? = currentGrid
+        while(previousGrid != null) {
+            println(distances[previousGrid])
+            previousGrid.print()
+            previousGrid = previous[previousGrid]
         }
 
-        return (outOfRoomMoves + outOfCorridorMoves).filter { (from, to) ->
-            // is it a clear path?
-
-            val steps = if (from.y == 1) {
-                // from corridor to room
-//                Coord(to.x, from.y)
-                (min(from.x, to.x)..max(from.x, to.x)).map { x -> Coord(x, from.y) } +
-                        (min(from.y, to.y)..max(from.y, to.y)).map { y -> Coord(to.x, y) }
-            }
-            else if(to.y == 1) {
-                // from room to corridor
-//                Coord(from.x, to.y)
-
-                (min(from.x, to.x)..max(from.x, to.x)).map { x -> Coord(x, to.y) } +
-                        (min(from.y, to.y)..max(from.y, to.y)).map { y -> Coord(from.x, y) }
-            } else {
-                // from room to room
-                (min(from.x, to.x)..max(from.x, to.x)).map { x -> Coord(x, 1) } +
-                        (1..from.y).map { y -> Coord(from.x, y) } +
-                        (1..to.y).map { y -> Coord(to.x, y) }
-            }
-
-
-
-            steps.filter {
-                it != from
-            }.all {
-                grid.getCoord(it) == '.'
-            }
-
-        }.map { (start, end) ->
-            // if going into a room, lock the coord
-            val newLocked = if (start.y > end.y) locked + end else locked
-
-            val newGrid = grid.copyGrid()
-            newGrid[end.y][end.x] = grid.getCoord(start)
-            newGrid[start.y][start.x] = grid.getCoord(end)
-
-            val energy = getEnergy(grid.getCoord(start))
-            val (diffX, diffY) = end - start
-            val cost = (abs(diffX) + abs(diffY)) * energy
-
-            val newCostSoFar = costSoFar + cost
-            if(newGrid !in visited) {
-                val ret = moveAmphipods(newGrid, newLocked, visited + listOf(newGrid as Grid<Char>), newCostSoFar)
-
-                (listOf(start to end) + ret.first) to ret.second
-            } else {
-                listOf<Pair<Coord, Coord>>() to MAX
-            }
-        }.minByOrNull {
-            it.second
-        } ?: (listOf<Pair<Coord, Coord>>() to MAX)
+        return distances[currentGrid]!!
     }
 
 
@@ -186,16 +281,6 @@ class Day23 : AdventOfCode {
         'D' -> 1000
         else -> 0
     }
-
-    fun isRoomComplete(grid: Grid<Char>, room: List<Coord>, c: Char) =
-        room.map { grid.getCoord(it) }.all { it == c }
-
-    fun isGridComplete(grid: Grid<Char>): Boolean =
-        isRoomComplete(grid, aRoom, 'A') &&
-                isRoomComplete(grid, bRoom, 'B') &&
-                isRoomComplete(grid, cRoom, 'C') &&
-                isRoomComplete(grid, dRoom, 'D') &&
-                isRoomComplete(grid, corridorCoords, '.')
 
 
     override fun part2() {
